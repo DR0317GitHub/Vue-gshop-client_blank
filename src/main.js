@@ -4,11 +4,15 @@ import Vue from 'vue'
 import App from './App.vue'
 import router from './router'
 import store from './store'
+import {Button} from 'mint-ui'
+
+import "./mock/mockServer"
 
 import HeaderTop from './components/HeaderTop/HeaderTop.vue'
 
 // 注册全局组件标签
 Vue.component('HeaderTop', HeaderTop)
+Vue.component(Button.name, Button)
 
 /* eslint-disable no-new */
 new Vue({

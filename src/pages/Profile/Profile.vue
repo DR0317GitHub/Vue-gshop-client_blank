@@ -1,27 +1,29 @@
 <template>
   <section class="profile">
-    <HeaderTop title="我的"></HeaderTop>
-      <router-link to="/login">
-        <section class="profile-number">
-          <a href="javascript:" class="profile-link">
-            <div class="profile_image">
-              <i class="iconfont icon-person"></i>
-            </div>
-            <div class="user-info">
-              <p class="user-info-top">登录/注册</p>
-              <p>
+    <HeaderTop title="我的"/>
+    <router-link :to="user._id ? '/userinfo' : '/login'">
+      <section class="profile-number">
+        <a href="javascript:" class="profile-link">
+          <div class="profile_image">
+            <i class="iconfont icon-person"></i>
+          </div>
+          <div class="user-info">
+            <p class="user-info-top" v-if="!user.phone">{{user.name ? user.name : '登录/注册'}}</p>
+            <p>
                 <span class="user-icon">
                   <i class="iconfont icon-shouji icon-mobile"></i>
                 </span>
-                <span class="icon-mobile-number">暂无绑定手机号</span>
-              </p>
-            </div>
-            <span class="arrow">
+              <span class="icon-mobile-number">
+                {{user.phone ? user.phone : '暂无绑定手机号'}}
+              </span>
+            </p>
+          </div>
+          <span class="arrow">
               <i class="iconfont icon-jiantou1"></i>
             </span>
-          </a>
-        </section>
-      </router-link>
+        </a>
+      </section>
+    </router-link>
 
     <section class="profile_info_data border-1px">
       <ul class="info_data_list">
@@ -91,10 +93,31 @@
         </div>
       </a>
     </section>
+
+    <section class="profile_my_order border-1px" v-show="user._id">
+      <mt-button type="danger" style="width: 100%" @click="logout">退出登陆</mt-button>
+    </section>
   </section>
 </template>
 <script>
+  import {mapState} from 'vuex'
+  import  {MessageBox} from "mint-ui"
   export default {
+    computed :{
+      ...mapState(['user'])
+    },
+    methods: {
+      logout () {
+        MessageBox.confirm('确定退出吗?').then(
+          action => {
+            this.$store.dispatch('logout')
+          },
+          action => {
+            console.log('点击了取消')
+          }
+        );
+      }
+    }
   }
 </script>
 <style scoped lang="stylus" rel="stylesheet/stylus">

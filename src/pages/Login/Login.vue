@@ -41,11 +41,11 @@
               <section class="login_message">
                 <input type="text" maxlength="11" placeholder="验证码" v-model="captcha">
                 <img class="get_verification" src="http://localhost:4000/captcha" alt="captcha"
-                @click="updateCaptcha">
+                @click="updateCaptcha" ref="captcha">
               </section>
             </section>
           </div>
-          <button class="login_submit" @click="shoujishuju">登录</button>
+          <button class="login_submit" @click.prevent="login">登录</button>
         </form>
         <a href="javascript:;" class="about_us">关于我们</a>
       </div>
@@ -57,7 +57,7 @@
 </template>
 <script>
   import {Toast, MessageBox} from 'mint-ui'
-  import {reqSendCode} from '../../api'
+  import {reqSendCode,reqMsgLogin,reqPwdLogin} from '../../api'
   export default {
     data() {
       return {
@@ -79,18 +79,20 @@
     methods: {
       // 发送一次性短信验证码
       async sendCode() {
+        /*1. 实现倒计时功能*/
         this.computeTime = 30
-        const IntervalId = setInterval(() => {
+        // 启循环定时器, 改变computedTime
+        const interverId = setInterval(() => {
           this.computeTime--
+          // 当计时达到最小值时, 清除定时器
           if (this.computeTime <= 0) {
             this.computeTime = 0
-            clearInterval(IntervalId)
+            clearInterval(interverId)
           }
-
         }, 1000)
         /*2. 发送请求去发短信验证码*/
         const result = await reqSendCode(this.phone)
-        if (result.code === 0) { // 成功
+        if(result.code===0) { // 成功
           Toast('验证码已发送')
         } else { // 失败
           // 停止计时
@@ -99,11 +101,67 @@
           MessageBox.alert('验证码发送失败', '提示')
         }
       },
-//      发送一次性验证码
-      updateCaptcha(event){
-        event.target.src="http://localhost:4000/captcha?time="+Date.now()
+
+      // 更新显示一次性图形验证码
+      updateCaptcha() { // 每次请求都不一样, 浏览器就会自动发请求获取新的图片
+        this.$refs.captcha.src = 'http://localhost:4000/captcha?time=' + Date.now()
+      },
+
+      showAlert(msg) {
+        MessageBox.alert(msg)
+      },
+      // 请求登陆
+      async login () {
+        // 前台表单验证
+        const {phone, code, name, pwd, captcha} = this
+        let result
+        if(this.loginWay) { // 密码登陆
+          if(!name) {
+            this.showAlert('请输入用户名')
+            return
+          } else if(!pwd) {
+            this.showAlert('请输入密码')
+            return
+          } else if(captcha.length!==4) {
+            this.showAlert('请输入4位验证码')
+            return
+          }
+          // 通过后, 提交登陆的请求
+          result = await reqPwdLogin({name, pwd, captcha})
+          // 更新一个验证码
+          this.updateCaptcha()
+        } else { // 短信登陆
+          if(!this.isRightPhone) {
+            this.showAlert('请输入正确手机号')
+            return
+          } else if(!/^\d{6}$/.test(code)) {
+            this.showAlert('请输入正确的验证码')
+            return
+          }
+          // 通过后, 提交登陆的请求
+          result = await reqMsgLogin(phone, code)
+        }
+
+        // 停止计时
+        if(this.computeTime> 0 ) {
+          this.computeTime = 0
+        }
+
+        // 根据结果做不同的处理
+        if(result.code===0) { // 登陆成功
+          const user = result.data
+          // 1. 将user保存到state
+          this.$store.dispatch('saveUser', user)
+          // 2. 自动跳转到个人中心
+          this.$router.replace('/profile')
+        } else { // 登陆失败
+          this.showAlert(result.msg)
+        }
       }
     },
+
+
+
   }
 </script>
 <style lang="stylus" rel="stylesheet/stylus">
