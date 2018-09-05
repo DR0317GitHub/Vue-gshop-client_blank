@@ -7,12 +7,15 @@ import store from './store'
 import {Button} from 'mint-ui'
 
 import "./mock/mockServer"
+import './filters'
 
 import HeaderTop from './components/HeaderTop/HeaderTop.vue'
+import Split from './components/Split/Split.vue'
 
 // 注册全局组件标签
 Vue.component('HeaderTop', HeaderTop)
 Vue.component(Button.name, Button)
+Vue.component('Split',Split)
 
 /* eslint-disable no-new */
 new Vue({

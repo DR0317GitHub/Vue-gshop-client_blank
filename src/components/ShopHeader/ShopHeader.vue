@@ -236,6 +236,8 @@
         margin-top 8px
         font-size 11px
         color #333
+        &>span
+          display inline-block
         .shop-message-detail:not(:last-child)::after
           float left
           content " \B7 "
